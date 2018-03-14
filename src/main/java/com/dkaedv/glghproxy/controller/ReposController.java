@@ -231,7 +231,10 @@ public class ReposController {
 				hook.getConfig().get("url"), 
 				hook.getEvents().contains("push"), 
 				false,
-				hook.getEvents().contains("pull_request"));
+				hook.getEvents().contains("pull_request"),
+				false,
+				true
+		);
 		
 		return GitlabToGithubConverter.convertHook(createdHook);
 	}

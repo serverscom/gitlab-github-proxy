@@ -3,9 +3,14 @@ package com.dkaedv.glghproxy.controller;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Collections;
 
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
@@ -15,10 +20,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.dkaedv.glghproxy.gitlabclient.OAuthClient;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @Controller
 @RequestMapping("/login/oauth")
 public class LoginController {
+	private static final Log LOG = LogFactory.getLog(ReposController.class);
+
 	@Value("${gitlabUrl}")
 	private String gitlabUrl;
 	
@@ -36,29 +44,53 @@ public class LoginController {
 			@RequestParam String scope,
 			@RequestParam String client_id,
 			@RequestParam String redirect_uri,
-			HttpServletRequest request) throws UnsupportedEncodingException, MalformedURLException {
+			HttpServletRequest request, HttpServletResponse response) throws UnsupportedEncodingException, MalformedURLException {
 		
 		// Save redirect uri
-		this.redirectUri = redirect_uri;
-		
+		response.addCookie(new Cookie("redirect_url", redirect_uri));
+
 		String callbackUrl = buildCallbackUrl(request);
 		
 		return "redirect:" + gitlabUrl + "/oauth/authorize?client_id=" + client_id + "&response_type=code&redirect_uri=" + callbackUrl;
 	}
 
 	private String buildCallbackUrl(HttpServletRequest request) throws MalformedURLException {
-		return new URL(new URL(request.getRequestURL().toString()), "./authorize_callback").toString();
+		String scheme = request.getHeader("x-forwarded-proto");
+		ServletUriComponentsBuilder builder = ServletUriComponentsBuilder.fromCurrentRequest();
+
+		if (scheme != null) {
+			builder.scheme(scheme);
+		}
+
+		builder.replacePath("/login/oauth/authorize_callback");
+		builder.replaceQuery(null);
+		builder.port(null);
+
+		return builder.build().toUri().toString();
+	}
+
+	private String extractCookie(HttpServletRequest req, String cookieName) {
+		for (Cookie c : req.getCookies()) {
+			if (c.getName().equals(cookieName))
+				return c.getValue();
+		}
+		return null;
 	}
 
 	@RequestMapping("/authorize_callback")
 	public String gitlabCallback(
-			@RequestParam String code
+			@RequestParam String code,
+			HttpServletRequest request
 			) {
 
-		String answer = "redirect:" + this.redirectUri + "&code=" + code;
-		
-		// Clear redirect uri
-		this.redirectUri = null;
+		String redirectUrl = extractCookie(request, "redirect_url");
+		String answer;
+
+		if(redirectUrl != null) {
+			answer = "redirect:" + redirectUrl + "&code=" + code;
+		} else {
+			answer = "redirect:" + gitlabUrl;
+		}
 		
 		return answer;
 	}

@@ -3,6 +3,8 @@ package com.dkaedv.glghproxy.controller;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.eclipse.egit.github.core.Repository;
 import org.eclipse.egit.github.core.User;
 import org.gitlab.api.GitlabAPI;
@@ -24,6 +26,8 @@ import com.dkaedv.glghproxy.gitlabclient.GitlabSessionProvider;
 @Controller
 @RequestMapping("/api/v3/users")
 public class UsersController {
+	private static final Log LOG = LogFactory.getLog(ReposController.class);
+
 	@Autowired
 	private GitlabSessionProvider gitlab;
 
@@ -36,7 +40,7 @@ public class UsersController {
 			@RequestHeader("Authorization") String authorization) throws IOException {
 
 		GitlabAPI api = gitlab.connect(authorization);
-		List<GitlabProject> projects = api.getProjects();
+		List<GitlabProject> projects = api.getMembershipProjects();
 		
 		return GitlabToGithubConverter.convertRepositories(projects);
 	}
