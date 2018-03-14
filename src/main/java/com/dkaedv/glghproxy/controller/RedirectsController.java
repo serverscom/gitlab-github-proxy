@@ -19,7 +19,7 @@ public class RedirectsController {
 	public String namespace(
 			@PathVariable String namespace
 			) {
-		
+
 		return "redirect:" + gitlabUrl + "/" + namespace;
 	}
 
@@ -28,17 +28,17 @@ public class RedirectsController {
 			@PathVariable String namespace,
 			@PathVariable String repo
 			) {
-		
+
 		return "redirect:" + gitlabUrl + "/" + namespace + "/" + repo;
 	}
-	
+
 	@RequestMapping("/{namespace}/{repo}/commit/{sha}")
 	public String commit(
 			@PathVariable String namespace,
 			@PathVariable String repo,
 			@PathVariable String sha
 			) {
-		
+
 		return "redirect:" + gitlabUrl + "/" + namespace + "/" + repo + "/commit/" + sha;
 	}
 
@@ -57,4 +57,22 @@ public class RedirectsController {
 		return "redirect:" + gitlabUrl + "/" + namespace + "/" + repo + "/tree/" + branch;
 	}
 
+	@RequestMapping("/{namespace}/{repo}/compare")
+	public String compare(
+			@PathVariable String namespace,
+			@PathVariable String repo
+	) {
+
+		return "redirect:" + gitlabUrl + "/" + namespace + "/" + repo + "/compare";
+	}
+
+	@RequestMapping("/{namespace}/{repo}/compare/{spec}")
+	public String compare(
+			@PathVariable String namespace,
+			@PathVariable String repo,
+			@PathVariable String spec
+	) {
+
+		return "redirect:" + gitlabUrl + "/" + namespace + "/" + repo + "/compare/" + spec;
+	}
 }
