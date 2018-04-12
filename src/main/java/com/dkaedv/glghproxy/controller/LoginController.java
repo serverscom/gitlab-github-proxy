@@ -29,15 +29,15 @@ public class LoginController {
 
 	@Value("${gitlabUrl}")
 	private String gitlabUrl;
-	
+
 	@Autowired
 	private OAuthClient oauthClient;
-	
+
 	private String redirectUri;
-	
+
 	/**
 	 * Step 1 - OAuth request from client application (e.g. JIRA)
-	 * @throws MalformedURLException 
+	 * @throws MalformedURLException
 	 */
 	@RequestMapping("/authorize")
 	public String authorize(
@@ -45,22 +45,17 @@ public class LoginController {
 			@RequestParam String client_id,
 			@RequestParam String redirect_uri,
 			HttpServletRequest request, HttpServletResponse response) throws UnsupportedEncodingException, MalformedURLException {
-		
+
 		// Save redirect uri
 		response.addCookie(new Cookie("redirect_url", redirect_uri));
 
 		String callbackUrl = buildCallbackUrl(request);
-		
+
 		return "redirect:" + gitlabUrl + "/oauth/authorize?client_id=" + client_id + "&response_type=code&redirect_uri=" + callbackUrl;
 	}
 
 	private String buildCallbackUrl(HttpServletRequest request) throws MalformedURLException {
-		String scheme = request.getHeader("x-forwarded-proto");
 		ServletUriComponentsBuilder builder = ServletUriComponentsBuilder.fromCurrentRequest();
-
-		if (scheme != null) {
-			builder.scheme(scheme);
-		}
 
 		builder.replacePath("/login/oauth/authorize_callback");
 		builder.replaceQuery(null);
@@ -91,11 +86,11 @@ public class LoginController {
 		} else {
 			answer = "redirect:" + gitlabUrl;
 		}
-		
+
 		return answer;
 	}
-	
-	
+
+
 	/**
 	 * Step 3 - Client application exchanges code for an access token.
 	 */
